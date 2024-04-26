@@ -141,37 +141,44 @@ public class RemoteCommanderServer {
         output.println("END"); // Indicador de fin de envío
         output.flush();
     }
-   // TODO TERMINAR SEND
-    private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
-        if (tokens.length < 3) {
-            output.println("Error: Uso incorrecto del comando SEND.");
-            return;
-        }
-        String fileName = tokens[1];
-        String directoryPath = tokens[2];
+   // TODO TERMINAR SEND PARA QUE FUNCIONE CON IMAGENES. CONTROLAR QUE DIRECTORIO EXISTA
+   private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
+       if (tokens.length != 4) {
+           output.println("Error: Comando SEND incorrecto");
+           return;
+       }
 
-        File directory = new File(directoryPath);
-        if (!directory.exists() || !directory.isDirectory()) {
-            output.println("Error: El directorio remoto no existe.");
-            return;
-        }
+       String fileName = tokens[1];
+       String directoryPath = tokens[2];
+       long fileSize = Long.parseLong(tokens[3]);
 
-        File file = new File(directory, fileName);
-        int fileSize = in.readInt(); // Espera recibir el tamaño del archivo primero
-        try (FileOutputStream fos = new FileOutputStream(file);
-             BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while (fileSize > 0 && (bytesRead = in.read(buffer, 0, Math.min(buffer.length, fileSize))) != -1) {
-                bos.write(buffer, 0, bytesRead);
-                fileSize -= bytesRead;
-            }
-            bos.flush();
-            output.println("Archivo " + fileName + " recibido correctamente.");
-        } catch (IOException e) {
-            output.println("Error al recibir el archivo: " + e.getMessage());
-        }
-    }
+       File directory = new File(directoryPath);
+       if (!directory.exists() || !directory.isDirectory()) {
+           output.println("El directorio no es válido: " + directoryPath);
+           return;
+       }
+
+       File file = new File(directory, fileName);
+       try (FileOutputStream fos = new FileOutputStream(file);
+            BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+           byte[] buffer = new byte[4096];
+           int bytesRead;
+           long remaining = fileSize;
+           while (remaining > 0 && (bytesRead = in.read(buffer, 0, (int)Math.min(buffer.length, remaining))) != -1) {
+               bos.write(buffer, 0, bytesRead);
+               remaining -= bytesRead;
+           }
+           bos.flush();
+           if (remaining == 0) {
+               output.println("Archivo " + fileName + " recibido correctamente.");
+           } else {
+               output.println("Error al recibir el archivo: Datos incompletos.");
+           }
+       } catch (IOException e) {
+           output.println("Error al recibir el archivo: " + e.getMessage());
+       }
+   }
+
 
 
     private static void startSSLServer() throws Exception {

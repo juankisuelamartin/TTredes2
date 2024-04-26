@@ -94,37 +94,35 @@ public class RemoteCommanderClient {
             System.out.println(response);
         }
     }
-    // TODO TERMINAR SEND
+    // TODO TERMINAR SEND PARA QUE FUNCIONE CON IMAGENES.
     private void sendFile(String command) throws IOException {
         String[] parts = command.split(" ");
-        String filePath = parts[1];
+
+        String filePath = parts[1].replace("\\", "\\\\"); // Asegurándonos de que las barras invertidas son escapadas correctamente
         String remoteDirectory = parts[2];
         File file = new File(filePath);
 
-        if (!file.exists() || file.isDirectory()) {
-            System.out.println("El archivo no existe o es un directorio.");
+        if (!file.exists()) {
+            System.out.println("El archivo no existe: " + filePath);
             return;
         }
 
+        // Extraer solo el nombre del archivo para enviar al servidor
+        String fileName = file.getName(); // Esto obtiene solo el nombre del archivo, sin el path
+
         long fileSize = file.length();
-        DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
-        dataOut.writeUTF("SEND " + file.getName() + " " + remoteDirectory); // Envía el comando con UTF para manejar correctamente el texto
-        dataOut.writeLong(fileSize); // Envía el tamaño del archivo
+        out.println("SEND " + fileName + " " + remoteDirectory + " " + fileSize); // Enviar comando con el nombre del archivo, directorio remoto y tamaño
+        out.flush();
 
-        try (BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file))) {
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                dataOut.write(buffer, 0, bytesRead);  // Envía el contenido del archivo
-            }
-            dataOut.flush();
+        FileInputStream fis = new FileInputStream(file);
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = fis.read(buffer)) != -1) {
+            socket.getOutputStream().write(buffer, 0, bytesRead);
         }
-
-        // Lee la respuesta del servidor usando DataInputStream
-        DataInputStream dataIn = new DataInputStream(socket.getInputStream());
-        String serverResponse = dataIn.readUTF();
-        System.out.println(serverResponse);
+        fis.close();
     }
+
 
 
     private void receiveFile(String command) throws IOException {
