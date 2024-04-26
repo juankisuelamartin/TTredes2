@@ -61,7 +61,7 @@ public class RemoteCommanderClient {
     private void executeCommand(String command) {
         try {
             if (command.startsWith("SEND")) {
-               //TODO  sendFile(command);
+               sendFile(command);
             } else if (command.startsWith("RECEIVE")) {
                //TODO  receiveFile(command);
             } else if (command.startsWith("LIST")) {
@@ -94,12 +94,38 @@ public class RemoteCommanderClient {
             System.out.println(response);
         }
     }
-
-
-
+    // TODO TERMINAR SEND
     private void sendFile(String command) throws IOException {
-            //TODO
+        String[] parts = command.split(" ");
+        String filePath = parts[1];
+        String remoteDirectory = parts[2];
+        File file = new File(filePath);
+
+        if (!file.exists() || file.isDirectory()) {
+            System.out.println("El archivo no existe o es un directorio.");
+            return;
+        }
+
+        long fileSize = file.length();
+        DataOutputStream dataOut = new DataOutputStream(socket.getOutputStream());
+        dataOut.writeUTF("SEND " + file.getName() + " " + remoteDirectory); // Envía el comando con UTF para manejar correctamente el texto
+        dataOut.writeLong(fileSize); // Envía el tamaño del archivo
+
+        try (BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file))) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                dataOut.write(buffer, 0, bytesRead);  // Envía el contenido del archivo
+            }
+            dataOut.flush();
+        }
+
+        // Lee la respuesta del servidor usando DataInputStream
+        DataInputStream dataIn = new DataInputStream(socket.getInputStream());
+        String serverResponse = dataIn.readUTF();
+        System.out.println(serverResponse);
     }
+
 
     private void receiveFile(String command) throws IOException {
         // TODO

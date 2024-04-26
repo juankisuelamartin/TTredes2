@@ -69,15 +69,17 @@ public class RemoteCommanderServer {
     public void sirve(Socket cliente) {
         new Thread(() -> {
             try {
-                InputStream in = cliente.getInputStream();
-                OutputStream out = cliente.getOutputStream();
-                Scanner sc = new Scanner(in);
-                PrintWriter output = new PrintWriter(out, true);
+                InputStream inRaw = cliente.getInputStream();
+                OutputStream outRaw = cliente.getOutputStream();
+                DataInputStream in = new DataInputStream(new BufferedInputStream(inRaw));
+                PrintWriter output = new PrintWriter(new OutputStreamWriter(outRaw), true);
 
                 while (true) {
-                    String recibido = sc.nextLine();
+                    // Asumiendo que el comando inicial viene como un string de texto
+                    // Usar readLine del BufferedReader para leer el comando si es texto, no DataInputStream
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    String recibido = reader.readLine();
                     String[] tokens = recibido.split(" ");
-                    System.out.println(tokens[0]);
                     switch (tokens[0]) {
                         case "PING":
                             handlePing(output);
@@ -87,7 +89,8 @@ public class RemoteCommanderServer {
                             handleList(tokens[1], output); // Solo se pasa la ruta del directorio
                             break;
                         case "SEND":
-                            //TODO handleSend(tokens, sc, output);
+                            System.out.println("RECIBIENDO ARCHIVO: " + tokens[1]);
+                            handleSend(tokens, in, output);
                             break;
                         case "RECEIVE":
                             //TODO handleReceive(tokens, output);
@@ -138,7 +141,37 @@ public class RemoteCommanderServer {
         output.println("END"); // Indicador de fin de envío
         output.flush();
     }
+   // TODO TERMINAR SEND
+    private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
+        if (tokens.length < 3) {
+            output.println("Error: Uso incorrecto del comando SEND.");
+            return;
+        }
+        String fileName = tokens[1];
+        String directoryPath = tokens[2];
 
+        File directory = new File(directoryPath);
+        if (!directory.exists() || !directory.isDirectory()) {
+            output.println("Error: El directorio remoto no existe.");
+            return;
+        }
+
+        File file = new File(directory, fileName);
+        int fileSize = in.readInt(); // Espera recibir el tamaño del archivo primero
+        try (FileOutputStream fos = new FileOutputStream(file);
+             BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while (fileSize > 0 && (bytesRead = in.read(buffer, 0, Math.min(buffer.length, fileSize))) != -1) {
+                bos.write(buffer, 0, bytesRead);
+                fileSize -= bytesRead;
+            }
+            bos.flush();
+            output.println("Archivo " + fileName + " recibido correctamente.");
+        } catch (IOException e) {
+            output.println("Error al recibir el archivo: " + e.getMessage());
+        }
+    }
 
 
     private static void startSSLServer() throws Exception {
