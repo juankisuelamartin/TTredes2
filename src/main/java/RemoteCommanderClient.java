@@ -1,5 +1,3 @@
-package Trabajo_Teorico_LFT.Client;
-
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
@@ -7,7 +5,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Scanner;
-
+// TODO CONTROLAR EL NUM MAX_CLIENTES.
 public class RemoteCommanderClient {
     private String host;
     private int port;
@@ -38,6 +36,14 @@ public class RemoteCommanderClient {
             String response = in.readLine();
             if (response != null && response.equals("PONG")) {
                 System.out.println("Server is reachable.");
+                System.out.println("Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT\n" +
+                        "Ejemplo de uso:\n" +
+                        "SEND <nombre_archivo> <ruta_destino>\n" +
+                        "RECEIVE <nombre_archivo> <ruta_destino>\n" +
+                        "LIST <ruta_a_listar_servidor>\n" +
+                        "EXEC <comando_a_ejecutar_en_servidor>\n"+
+                        "EXIT para cerrar la conexion del cliente\n");
+
             } else {
                 System.out.println("Server is not reachable.");
                 closeConnection();
@@ -61,7 +67,6 @@ public class RemoteCommanderClient {
     }
 
     private void executeCommand(String command) {
-        // TODO DEVOLVER COMANDO NO ESPECIFICADO SI NO ES CUALQUIERA DE LOS ESTABLECIDOS.
         try {
             if (command.startsWith("SEND")) {
                sendFile(command);
@@ -77,6 +82,8 @@ public class RemoteCommanderClient {
                 closeConnection(); // Cierra la conexión después de enviar FIN
                 // Parar la ejecucion
                 System.exit(0);
+            }else {
+                System.out.println("Comando no reconocido. Pruebe con: SEND, RECEIVE, LIST, EXEC o EXIT");
             }
         } catch (IOException e) {
             e.printStackTrace();

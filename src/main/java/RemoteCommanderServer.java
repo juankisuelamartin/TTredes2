@@ -1,11 +1,7 @@
-package Trabajo_Teorico_LFT.Servidor;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -14,8 +10,12 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 import java.security.KeyStore;
 import javax.net.ssl.SSLSocket;
-
+//TODO ARREGLAR EXCEPCION QUE SALTA AL REINICIAR EL CLIENTE. java.net.SocketException: Connection reset
+//TODO ARREGLAR EXCEPCION NULL AL HACER EXIT. java.lang.NullPointerException LINEA 85
 public class RemoteCommanderServer {
+    private static int port = 8008; // Valor predeterminado para el puerto
+    private static boolean useSSL = false; // Valor predeterminado para SSL
+    private static int maxClients = 10; // Valor predeterminado para el máximo de clientes
     private static final String KEYSTORE_PATH = "path/to/keystore.jks";
     private static final String KEYSTORE_PASS = "password";
     private static final String TRUSTSTORE_PATH = "path/to/truststore.jks";
@@ -24,17 +24,16 @@ public class RemoteCommanderServer {
     // /home/ubuntu/FolderServidor
     // C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor
     private static final int __MAX_BUFFER = 1024;
-
-    private static boolean useSSL = false;
-    private static int port;
-    private static int maxClients;
     private static ExecutorService threadPool;
 
     static File logCommandsFile = new File("acciones.log");
     static File logErrorsFile = new File("errores.log");
 
     public static void main(String[] args) throws Exception {
-        parseArguments(args);
+        if (!parseArguments(args)) {
+            System.out.println("Usage: java RemoteCommanderServer modo=SSL|noSSL puerto=<port> max_clientes=<maxClients>");
+            return;
+        }
 
         if (useSSL) {
             startSSLServer();
@@ -43,26 +42,30 @@ public class RemoteCommanderServer {
         }
     }
 
-    private static void parseArguments(String[] args) {
+    private static boolean parseArguments(String[] args) {
         for (String arg : args) {
             if (arg.startsWith("modo=")) {
-                useSSL = arg.substring(5).equalsIgnoreCase("SSL");
+                useSSL = "SSL".equalsIgnoreCase(arg.substring(5));
             } else if (arg.startsWith("puerto=")) {
-                port = Integer.parseInt(arg.substring(7));
+                try {
+                    port = Integer.parseInt(arg.substring(7));
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid port number.");
+                    return false;
+                }
             } else if (arg.startsWith("max_clientes=")) {
-                maxClients = Integer.parseInt(arg.substring(13));
+                try {
+                    maxClients = Integer.parseInt(arg.substring(13));
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid number of max clients.");
+                    return false;
+                }
+            } else {
+                System.out.println("Unknown argument: " + arg);
+                return false;
             }
         }
-
-        if (port == 0) {
-            port = 8008; // default port if not specified
-        }
-
-        if (maxClients == 0) {
-            maxClients = 10; // default max clients if not specified
-        }
-
-        threadPool = Executors.newFixedThreadPool(maxClients);
+        return true;
     }
 
 
@@ -281,6 +284,9 @@ public class RemoteCommanderServer {
                 Socket clientSocket = serverSocket.accept();
                 new RemoteCommanderServer().sirve(clientSocket);
             }
+        }catch (IOException e){
+            System.out.println("Error al crear el socket del servidor: " + e.getMessage());
         }
     }
 }
+
