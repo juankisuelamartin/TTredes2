@@ -20,9 +20,9 @@ public class RemoteCommanderServer {
     private static final String KEYSTORE_PASS = "password";
     private static final String TRUSTSTORE_PATH = "path/to/truststore.jks";
     private static final String TRUSTSTORE_PASS = "password";
-    private static final String carpetaServidor = "/home/ubuntu/FolderServidor";
+    private static final String carpetaServidor = "C:\\Users\\soyju\\Documents\\GitHub\\TTredes2\\src\\main\\java\\Trabajo_Teorico_LFT\\carpeta_prueba_servidor";
     // /home/ubuntu/FolderServidor
-    // C:\Users\Equipo\Desktop\carpetaServidor
+    private static final int __MAX_BUFFER = 1024;
 
     private static boolean useSSL = false;
     private static int port;
@@ -93,7 +93,8 @@ public class RemoteCommanderServer {
                             handleSend(tokens, in, output);
                             break;
                         case "RECEIVE":
-                            //TODO handleReceive(tokens, output);
+                            System.out.println("ENVIANDO ARCHIVO: " + tokens[1]);
+                            handleReceive(cliente, recibido);
                             break;
                         case "EXEC":
                             //TODO handleExec(tokens, output);
@@ -141,43 +142,83 @@ public class RemoteCommanderServer {
         output.println("END"); // Indicador de fin de envío
         output.flush();
     }
-   // TODO TERMINAR SEND PARA QUE FUNCIONE CON IMAGENES. CONTROLAR QUE DIRECTORIO EXISTA
    private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
-       if (tokens.length != 4) {
-           output.println("Error: Comando SEND incorrecto");
-           return;
-       }
-
-       String fileName = tokens[1];
-       String directoryPath = tokens[2];
-       long fileSize = Long.parseLong(tokens[3]);
-
+       String directoryPath = tokens[2].trim();
+       String fileName = tokens[1].trim();
        File directory = new File(directoryPath);
+
+       // Verifica que el directorio exista y sea un directorio
        if (!directory.exists() || !directory.isDirectory()) {
-           output.println("El directorio no es válido: " + directoryPath);
-           return;
+           output.println("Error: The destination directory does not exist or is not a directory.");
+           return; // Detiene la ejecución si el directorio no es válido
        }
 
-       File file = new File(directory, fileName);
-       try (FileOutputStream fos = new FileOutputStream(file);
-            BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-           byte[] buffer = new byte[4096];
-           int bytesRead;
-           long remaining = fileSize;
-           while (remaining > 0 && (bytesRead = in.read(buffer, 0, (int)Math.min(buffer.length, remaining))) != -1) {
-               bos.write(buffer, 0, bytesRead);
-               remaining -= bytesRead;
+       File file = new File(directoryPath, fileName);
+
+       // Intenta crear el archivo para asegurarse de que no hay errores de permisos, etc.
+       if (!file.createNewFile()) {
+           output.println("Error: Cannot create file in the specified directory. Check permissions.");
+           return; // Detiene la ejecución si no se puede crear el archivo
+       }
+
+
+       output.println("Ready to receive file: " + fileName);
+       FileOutputStream fos = new FileOutputStream(file);
+       byte[] buffer = new byte[__MAX_BUFFER];
+
+       int expectedBytes = Integer.parseInt(tokens[2]); // Suponemos que el tamaño del archivo viene como segundo token.
+       int bytesRead;
+       int totalBytesRead = 0;
+
+       while (totalBytesRead < expectedBytes) {
+           bytesRead = in.read(buffer);
+           if (bytesRead == -1) {
+               break;
            }
-           bos.flush();
-           if (remaining == 0) {
-               output.println("Archivo " + fileName + " recibido correctamente.");
-           } else {
-               output.println("Error al recibir el archivo: Datos incompletos.");
-           }
-       } catch (IOException e) {
-           output.println("Error al recibir el archivo: " + e.getMessage());
+           fos.write(buffer, 0, bytesRead);
+           totalBytesRead += bytesRead;
+       }
+       fos.close();
+
+       if (totalBytesRead == expectedBytes) {
+           output.println("File received successfully.");
+       } else {
+           output.println("File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
        }
    }
+
+    public void handleReceive(Socket clientSocket, String command) throws IOException {
+        String[] parts = command.split(" ");
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Command format error. Usage: RECEIVE <file_name>");
+        }
+
+        String fileName = parts[1];
+        File fileToSend = new File(carpetaServidor, fileName);
+        if (!fileToSend.exists()) {
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out.println("File not found");
+            return;
+        }
+
+        long fileSize = fileToSend.length();
+        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        out.println(fileSize);  // Send the file size to the client
+
+        // Send the file
+        try (FileInputStream fis = new FileInputStream(fileToSend)) {
+            byte[] buffer = new byte[__MAX_BUFFER];
+            int bytesRead;
+            OutputStream clientOutput = clientSocket.getOutputStream();
+
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                clientOutput.write(buffer, 0, bytesRead);
+            }
+        }
+
+        System.out.println("File '" + fileName + "' sent successfully to client.");
+    }
+
 
 
 
