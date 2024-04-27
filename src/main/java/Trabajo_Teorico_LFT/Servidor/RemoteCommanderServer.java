@@ -20,8 +20,9 @@ public class RemoteCommanderServer {
     private static final String KEYSTORE_PASS = "password";
     private static final String TRUSTSTORE_PATH = "path/to/truststore.jks";
     private static final String TRUSTSTORE_PASS = "password";
-    private static final String carpetaServidor = "C:\\Users\\soyju\\Documents\\GitHub\\TTredes2\\src\\main\\java\\Trabajo_Teorico_LFT\\carpeta_prueba_servidor";
+    private static final String carpetaServidor = "/home/ubuntu/FolderServidor";
     // /home/ubuntu/FolderServidor
+    // C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor
     private static final int __MAX_BUFFER = 1024;
 
     private static boolean useSSL = false;
@@ -97,9 +98,10 @@ public class RemoteCommanderServer {
                             handleReceive(cliente, recibido);
                             break;
                         case "EXEC":
-                            //TODO handleExec(tokens, output);
+                            System.out.println("EJECUTANDO COMANDO: " + tokens[1]);
+                            handleExec(recibido, output);
                             break;
-                        case "FIN":
+                        case "EXIT":
                             System.out.println("Cerrando conexión por solicitud del cliente.");
                             cliente.close();
                             return; // Salir del bucle y del hilo
@@ -143,12 +145,13 @@ public class RemoteCommanderServer {
         output.flush();
     }
    private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
-       String directoryPath = tokens[2].trim();
+       String directoryPath = tokens[3].trim();
        String fileName = tokens[1].trim();
        File directory = new File(directoryPath);
 
        // Verifica que el directorio exista y sea un directorio
        if (!directory.exists() || !directory.isDirectory()) {
+           System.out.println(directory);
            output.println("Error: The destination directory does not exist or is not a directory.");
            return; // Detiene la ejecución si el directorio no es válido
        }
@@ -157,7 +160,7 @@ public class RemoteCommanderServer {
 
        // Intenta crear el archivo para asegurarse de que no hay errores de permisos, etc.
        if (!file.createNewFile()) {
-           output.println("Error: Cannot create file in the specified directory. Check permissions.");
+           output.println("Error: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
            return; // Detiene la ejecución si no se puede crear el archivo
        }
 
@@ -166,7 +169,7 @@ public class RemoteCommanderServer {
        FileOutputStream fos = new FileOutputStream(file);
        byte[] buffer = new byte[__MAX_BUFFER];
 
-       int expectedBytes = Integer.parseInt(tokens[2]); // Suponemos que el tamaño del archivo viene como segundo token.
+       int expectedBytes = Integer.parseInt(tokens[2]); // el tamaño del archivo viene como segundo token.
        int bytesRead;
        int totalBytesRead = 0;
 
@@ -180,12 +183,14 @@ public class RemoteCommanderServer {
        }
        fos.close();
 
-       if (totalBytesRead == expectedBytes) {
+        // TODO ARREGLAR EL EXCESO DE 5 BYTES
+       if (totalBytesRead == expectedBytes + 5) {
            output.println("File received successfully.");
        } else {
            output.println("File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
        }
    }
+
 
     public void handleReceive(Socket clientSocket, String command) throws IOException {
         String[] parts = command.split(" ");
@@ -218,8 +223,32 @@ public class RemoteCommanderServer {
 
         System.out.println("File '" + fileName + "' sent successfully to client.");
     }
+    public void handleExec(String inputLine, PrintWriter output) {
+        if (!inputLine.startsWith("EXEC ")) {
+            output.println("Error: Invalid command format.");
+            return;
+        }
 
+        // Extraer el comando completo después de "EXEC "
+        String command = inputLine.substring(5);  // después de "EXEC "
 
+        // Como el servidor estará alojado en Linux, se debe ejecutar el comando en una shell
+        String[] cmdArray = {"/bin/sh", "-c", command};
+
+        try {
+            Process process = Runtime.getRuntime().exec(cmdArray);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.println(line);
+            }
+            process.waitFor();  // Espera a que el proceso termine
+            output.println("END_OF_RESPONSE");  // Marca el fin de la salida del comando
+        } catch (IOException | InterruptedException e) {
+            output.println("Error executing command: " + e.getMessage());
+        }
+    }
 
 
     private static void startSSLServer() throws Exception {

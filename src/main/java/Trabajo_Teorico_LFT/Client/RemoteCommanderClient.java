@@ -70,14 +70,13 @@ public class RemoteCommanderClient {
             } else if (command.startsWith("LIST")) {
                 handleList(command);
             } else if (command.startsWith("EXEC")) {
-                // TODO
-            }else if (command.equals("FIN")){
+                handleExec(command);
+            }else if (command.equals("EXIT")){
                 out.println(command);
                 out.flush();
                 closeConnection(); // Cierra la conexión después de enviar FIN
                 // Parar la ejecucion
                 System.exit(0);
-
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -197,6 +196,20 @@ public class RemoteCommanderClient {
         System.out.println("File '" + fileName + "' received successfully and saved to '" + localPath + "'");
     }
 
+    private void handleExec(String command) throws IOException {
+        // Enviar el comando completo al servidor
+        out.println(command);
+        out.flush();
+
+        // Esperar y mostrar la respuesta del servidor
+        String responseLine;
+        while (!(responseLine = in.readLine()).equals("END_OF_RESPONSE")) {
+            System.out.println(responseLine);  // Imprime cada línea de la respuesta
+            if (responseLine.equals("Error")) {
+                break;
+            }
+        }
+    }
 
 
 
