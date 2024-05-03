@@ -6,7 +6,9 @@ import java.util.concurrent.ExecutorService;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import java.security.KeyStore;
 import javax.net.ssl.SSLSocket;
@@ -29,10 +31,35 @@ public class RemoteCommanderServer {
     static File logCommandsFile = new File("acciones.log");
     static File logErrorsFile = new File("errores.log");
 
+    public static void logCommands(String command) {
+        try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
+            writerLogCommandsFile.println(command);
+        } catch (IOException e) {
+            System.err.println("Error al escribir en el archivo de comandos: " + e.getMessage());
+            try (PrintWriter writerLogErrorsFile = new PrintWriter(new FileWriter(logErrorsFile, true))) {
+                writerLogErrorsFile.println("ERROR: Error al escribir en el archivo de comandos: " + e.getMessage());
+            } catch (IOException ex) {
+                System.err.println("Error al escribir en el archivo de errores: " + ex.getMessage());
+            }
+        }
+    }
+
+    public static void logErrors(String error) {
+        try (PrintWriter writerLogErrorsFile = new PrintWriter(new FileWriter(logErrorsFile, true))) {
+            writerLogErrorsFile.println(error);
+        } catch (IOException e) {
+            System.err.println("Error al escribir en el archivo de errores: " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) throws Exception {
+
         if (!parseArguments(args)) {
             System.out.println("Usage: java RemoteCommanderServer modo=SSL|noSSL puerto=<port> max_clientes=<maxClients>");
+            logErrors("ERROR: Usage: java RemoteCommanderServer modo=SSL|noSSL puerto=<port> max_clientes=<maxClients>");
             return;
+        } else {
+            logCommands("Comando de inicio: java RemoteCommanderServer " + String.join(" ", args));
         }
 
         if (useSSL) {
@@ -58,6 +85,7 @@ public class RemoteCommanderServer {
                     maxClients = Integer.parseInt(arg.substring(13));
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid number of max clients.");
+
                     return false;
                 }
             } else {
@@ -86,30 +114,43 @@ public class RemoteCommanderServer {
                     String[] tokens = recibido.split(" ");
                     switch (tokens[0]) {
                         case "PING":
+                            logCommands("PING recibido del cliente. ");
                             handlePing(output);
+                            logCommands("PONG enviado al cliente.");
                             break;
                         case "LIST":
+                            logCommands("LIST recibido del cliente. ");
                             System.out.println("LISTANDO: " + tokens[1]);
                             handleList(tokens[1], output); // Solo se pasa la ruta del directorio
+                            logCommands("LIST enviado al cliente. ");
                             break;
                         case "SEND":
+                            logCommands("SEND recibido del cliente. ");
                             System.out.println("RECIBIENDO ARCHIVO: " + tokens[1]);
                             handleSend(tokens, in, output);
+                            logCommands("SEND enviado al cliente. ");
                             break;
                         case "RECEIVE":
+                            logCommands("RECEIVE recibido del cliente. ");
                             System.out.println("ENVIANDO ARCHIVO: " + tokens[1]);
                             handleReceive(cliente, recibido);
+                            logCommands("RECEIVE enviado al cliente. ");
                             break;
                         case "EXEC":
+                            logCommands("EXEC recibido del cliente. ");
                             System.out.println("EJECUTANDO COMANDO: " + tokens[1]);
                             handleExec(recibido, output);
+                            logCommands("EXEC enviado al cliente. ");
                             break;
                         case "EXIT":
+                            logCommands("EXIT recibido del cliente. ");
                             System.out.println("Cerrando conexión por solicitud del cliente.");
                             cliente.close();
+                            logCommands("EXIT enviado al cliente. ");
                             return; // Salir del bucle y del hilo
                         default:
                             // Comando no conocido, enviar al servidor
+                            logCommands("Comando no reconocido: " + recibido);
                             System.out.println(recibido);
                             break;
                     }
@@ -117,11 +158,13 @@ public class RemoteCommanderServer {
 
             } catch (Exception e) {
                 e.printStackTrace();
+                logErrors("ERROR: " + e.getMessage());
             }finally {
                 try {
                     cliente.close(); // Asegúrate de cerrar el socket al final.
                 } catch (IOException e) {
                     System.err.println("Error al cerrar el socket: " + e.getMessage());
+                    logErrors("Error al cerrar el socket: " + e.getMessage());
                 }
             }
         }).start();
@@ -143,6 +186,7 @@ public class RemoteCommanderServer {
             output.println(enviar);
         } else {
             output.println("No existe la carpeta");
+            logErrors("ERROR: No existe la carpeta");
         }
         output.println("END"); // Indicador de fin de envío
         output.flush();
@@ -156,6 +200,7 @@ public class RemoteCommanderServer {
        if (!directory.exists() || !directory.isDirectory()) {
            System.out.println(directory);
            output.println("Error: The destination directory does not exist or is not a directory.");
+           logErrors("ERROR: The destination directory does not exist or is not a directory.");
            return; // Detiene la ejecución si el directorio no es válido
        }
 
@@ -164,6 +209,7 @@ public class RemoteCommanderServer {
        // Intenta crear el archivo para asegurarse de que no hay errores de permisos, etc.
        if (!file.createNewFile()) {
            output.println("Error: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
+           logErrors("ERROR: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
            return; // Detiene la ejecución si no se puede crear el archivo
        }
 
@@ -206,6 +252,7 @@ public class RemoteCommanderServer {
         if (!fileToSend.exists()) {
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
             out.println("File not found");
+            logErrors("ERROR: File not found");
             return;
         }
 
@@ -229,6 +276,7 @@ public class RemoteCommanderServer {
     public void handleExec(String inputLine, PrintWriter output) {
         if (!inputLine.startsWith("EXEC ")) {
             output.println("Error: Invalid command format.");
+            logErrors("ERROR: Invalid command format.");
             return;
         }
 
@@ -250,6 +298,7 @@ public class RemoteCommanderServer {
             output.println("END_OF_RESPONSE");  // Marca el fin de la salida del comando
         } catch (IOException | InterruptedException e) {
             output.println("Error executing command: " + e.getMessage());
+            logErrors("ERROR: Error executing command: " + e.getMessage());
         }
     }
 
@@ -286,6 +335,7 @@ public class RemoteCommanderServer {
             }
         }catch (IOException e){
             System.out.println("Error al crear el socket del servidor: " + e.getMessage());
+            logErrors("ERROR: Error al crear el socket del servidor: " + e.getMessage());
         }
     }
 }

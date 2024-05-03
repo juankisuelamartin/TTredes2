@@ -16,6 +16,31 @@ public class RemoteCommanderClient {
     private BufferedReader in;
     private Scanner scanner;
     private static final int __MAX_BUFFER = 1024;
+
+    static File logCommandsFile = new File("acciones.log");
+    static File logErrorsFile = new File("errores.log");
+
+    public static void logCommands(String command) {
+        try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
+            writerLogCommandsFile.println(command);
+        } catch (IOException e) {
+            System.err.println("Error al escribir en el archivo de comandos: " + e.getMessage());
+            try (PrintWriter writerLogErrorsFile = new PrintWriter(new FileWriter(logErrorsFile, true))) {
+                writerLogErrorsFile.println("ERROR: Error al escribir en el archivo de comandos: " + e.getMessage());
+            } catch (IOException ex) {
+                System.err.println("Error al escribir en el archivo de errores: " + ex.getMessage());
+            }
+        }
+    }
+
+    public static void logErrors(String error) {
+        try (PrintWriter writerLogErrorsFile = new PrintWriter(new FileWriter(logErrorsFile, true))) {
+            writerLogErrorsFile.println(error);
+        } catch (IOException e) {
+            System.err.println("Error al escribir en el archivo de errores: " + e.getMessage());
+        }
+    }
+
     public RemoteCommanderClient(String host, int port, boolean useSSL, String clientDirectory) {
         this.host = host;
         this.port = port;
@@ -32,6 +57,7 @@ public class RemoteCommanderClient {
 
             // Mandar PING al servidor
             out.println("PING");
+            logCommands("PING enviado al servidor.");
             socket.setSoTimeout(5000); // Establecer un tiempo de espera para la respuesta del servidor
             String response = in.readLine();
             if (response != null && response.equals("PONG")) {
@@ -46,6 +72,7 @@ public class RemoteCommanderClient {
 
             } else {
                 System.out.println("Server is not reachable.");
+                logErrors("ERROR. El servidor no está disponible.");
                 closeConnection();
                 return;
             }
@@ -57,10 +84,12 @@ public class RemoteCommanderClient {
                 if ("exit".equalsIgnoreCase(command)) {
                     break;
                 }
+                logCommands(command + " enviado al servidor.");
                 executeCommand(command);
             }
         } catch (Exception e) {
             e.printStackTrace();
+            logErrors("ERROR: " + e.getMessage());
         } finally {
             closeConnection();
         }
@@ -69,14 +98,19 @@ public class RemoteCommanderClient {
     private void executeCommand(String command) {
         try {
             if (command.startsWith("SEND")) {
+                logCommands(command + " enviado al servidor.");
                sendFile(command);
             } else if (command.startsWith("RECEIVE")) {
+                logCommands(command + " enviado al servidor.");
                receiveFile(command);
             } else if (command.startsWith("LIST")) {
+                logCommands(command + " enviado al servidor.");
                 handleList(command);
             } else if (command.startsWith("EXEC")) {
+                logCommands(command + " enviado al servidor.");
                 handleExec(command);
             }else if (command.equals("EXIT")){
+                logCommands(command + " enviado al servidor.");
                 out.println(command);
                 out.flush();
                 closeConnection(); // Cierra la conexión después de enviar FIN
@@ -84,14 +118,17 @@ public class RemoteCommanderClient {
                 System.exit(0);
             }else {
                 System.out.println("Comando no reconocido. Pruebe con: SEND, RECEIVE, LIST, EXEC o EXIT");
+                logErrors("ERROR: Comando no reconocido.");
             }
         } catch (IOException e) {
             e.printStackTrace();
+            logErrors("ERROR: " + e.getMessage());
         }
     }
     // Método para listar los archivos del servidor
     private void handleList(String command) throws IOException {
         out.println(command); // Enviar el comando al servidor
+        logCommands(command + " enviado al servidor.");
         out.flush(); // Forzar la escritura del mensaje
 
         // Leer la respuesta del servidor y mostrarla en la consola
@@ -109,6 +146,7 @@ public class RemoteCommanderClient {
         String[] commandParts = command.split(" ");
         if (commandParts.length < 3) {
             System.out.println("Usage: SEND <file_name> <destination_path>");
+            logErrors("ERROR: Usage: SEND <file_name> <destination_path>");
             return;
         }
 
@@ -118,11 +156,13 @@ public class RemoteCommanderClient {
 
         if (!fileToSend.exists()) {
             System.out.println("File does not exist: " + fileName);
+            logErrors("ERROR: File does not exist: " + fileName);
             return;
         }
 
         // Informamos al servidor sobre el archivo que se va a enviar
         out.println("SEND " + fileToSend.getName() + " " + fileToSend.length() + " " + destinationPath);
+        logCommands("SEND " + fileToSend.getName() + " " + fileToSend.length() + " " + destinationPath);
         out.flush();
 
         // Read and send the file in chunks
@@ -142,11 +182,13 @@ public class RemoteCommanderClient {
             System.out.println("File transfer completed.");
         } catch (IOException e) {
             System.out.println("Error during file transfer: " + e.getMessage());
+            logErrors("ERROR: Error during file transfer: " + e.getMessage());
             return;
         }
 
         // Informamos al servidor que hemos terminado de enviar el archivo
         out.println("EOF");
+        logCommands("EOF enviado al servidor.");
         out.flush();
 
         // Esperamos la respuesta del servidor
@@ -157,6 +199,7 @@ public class RemoteCommanderClient {
         String[] commandParts = command.split(" ");
         if (commandParts.length < 3) {
             System.out.println("Usage: RECEIVE <file_name> <local_destination_path>");
+            logErrors("ERROR: Usage: RECEIVE <file_name> <local_destination_path>");
             return;
         }
 
@@ -167,6 +210,7 @@ public class RemoteCommanderClient {
         // Verificamos que el directorio de destino exista y sea un directorio
         if (!destinationDirectory.exists() || !destinationDirectory.isDirectory()) {
             System.out.println("Error: The destination directory does not exist or is not a directory.");
+            logErrors("ERROR: The destination directory does not exist or is not a directory.");
             return; // Detiene la ejecución si el directorio no es válido
         }
 
@@ -175,11 +219,13 @@ public class RemoteCommanderClient {
         // Intentamos crear el archivo para asegurarnos de que no haya errores de permisos, etc.
         if (!fileToReceive.createNewFile()) {
             System.out.println("Error: Cannot create the file in the specified directory. Check permissions.");
+            logErrors("ERROR: Cannot create the file in the specified directory. Check permissions.");
             return; // Detiene la ejecución si no se puede crear el archivo
         }
 
         // Mandamos el comando al servidor
         out.println(command);
+        logCommands(command + " enviado al servidor.");
         out.flush();
 
         // Esperamos la respuesta del servidor y preparamos el archivo para recibir los datos
@@ -206,6 +252,7 @@ public class RemoteCommanderClient {
     private void handleExec(String command) throws IOException {
         // Enviar el comando completo al servidor
         out.println(command);
+        logCommands(command + " enviado al servidor.");
         out.flush();
 
         // Esperar y mostrar la respuesta del servidor
@@ -213,6 +260,7 @@ public class RemoteCommanderClient {
         while (!(responseLine = in.readLine()).equals("END_OF_RESPONSE")) {
             System.out.println(responseLine);  // Imprime cada línea de la respuesta
             if (responseLine.equals("Error")) {
+                logErrors("ERROR: Error en la ejecución del comando en el servidor.");
                 break;
             }
         }
@@ -228,13 +276,16 @@ public class RemoteCommanderClient {
             if (serverResponse != null) {
                 System.out.println("Server response: " + serverResponse);
                 if(serverResponse.contains("Error")){
+                    logErrors("ERROR: " + serverResponse);
                     return 1;
                 }
             } else {
                 System.out.println("No response from server.");
+                logErrors("ERROR: No response from server.");
             }
         } catch (SocketTimeoutException | SocketException e) {
             System.out.println("Timeout waiting for server response.");
+            logErrors("ERROR: Timeout waiting for server response.");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -250,6 +301,7 @@ public class RemoteCommanderClient {
             if (socket != null) socket.close();
         } catch (IOException e) {
             e.printStackTrace();
+            logErrors("ERROR: " + e.getMessage());
         }
     }
 
@@ -261,6 +313,7 @@ public class RemoteCommanderClient {
     public static void main(String[] args) {
         if (args.length != 4) {
             System.out.println("Usage: java RemoteCommanderClient <modo> <host> <port> <client_directory>");
+            logErrors("ERROR: Usage: java RemoteCommanderClient <modo> <host> <port> <client_directory>");
             System.exit(1);
         }
 
@@ -284,6 +337,7 @@ public class RemoteCommanderClient {
 
         if (host == null || port == 0 || clientDirectory == null) {
             System.out.println("Invalid arguments provided.");
+            logErrors("ERROR: Invalid arguments provided.");
             System.exit(1);
         }
 
