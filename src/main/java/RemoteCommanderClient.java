@@ -18,18 +18,13 @@ public class RemoteCommanderClient {
     private static final int __MAX_BUFFER = 1024;
 
     static File logCommandsFile = new File("acciones.log");
-    static File logErrorsFile = new File("errores.log");
+    static File logErrorsFile = new File("../../../errores.log");
 
     public static void logCommands(String command) {
         try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
             writerLogCommandsFile.println(command);
         } catch (IOException e) {
             System.err.println("Error al escribir en el archivo de comandos: " + e.getMessage());
-            try (PrintWriter writerLogErrorsFile = new PrintWriter(new FileWriter(logErrorsFile, true))) {
-                writerLogErrorsFile.println("ERROR: Error al escribir en el archivo de comandos: " + e.getMessage());
-            } catch (IOException ex) {
-                System.err.println("Error al escribir en el archivo de errores: " + ex.getMessage());
-            }
         }
     }
 

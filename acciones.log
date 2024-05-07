@@ -1,7 +1,33 @@
-Command: SEND C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor\TEST.jpg
-Command: SEND C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor\TEST.jpg
-Command: SEND carpeta_prueba_servidor\TEST.jpg
-Command: SEND carpeta_prueba_servidor\TEST.jpg
-Command: SEND carpeta_prueba_servidor\TEST.jpg
-Command: PING
-Command: PING
+Comando de inicio: java RemoteCommanderServer 
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+PING recibido del cliente. 
+PING enviado al servidor.
+PONG enviado al cliente.
+LIST /home enviado al servidor.
+LIST /home enviado al servidor.
+LIST /home enviado al servidor.
+LIST recibido del cliente. 
+LIST enviado al cliente. 
+LIST \home enviado al servidor.
+LIST \home enviado al servidor.
+LIST \home enviado al servidor.
+LIST recibido del cliente. 
+LIST enviado al cliente. 
+PING enviado al servidor.
+LIST /home enviado al servidor.
+LIST /home enviado al servidor.
+LIST /home enviado al servidor.
+LIST /home/ubuntu enviado al servidor.
+LIST /home/ubuntu enviado al servidor.
+LIST /home/ubuntu enviado al servidor.
+EXEC ip a enviado al servidor.
+EXEC ip a enviado al servidor.
+EXEC ip a enviado al servidor.
+PING enviado al servidor.
+LIST /home/ubuntu enviado al servidor.
+LIST /home/ubuntu enviado al servidor.
+LIST /home/ubuntu enviado al servidor.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10

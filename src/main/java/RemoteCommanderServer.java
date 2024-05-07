@@ -29,7 +29,7 @@ public class RemoteCommanderServer {
     private static ExecutorService threadPool;
 
     static File logCommandsFile = new File("acciones.log");
-    static File logErrorsFile = new File("errores.log");
+    static File logErrorsFile = new File("../../../errores.log");
 
     public static void logCommands(String command) {
         try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
@@ -171,6 +171,7 @@ public class RemoteCommanderServer {
     }
 
     private void handlePing(PrintWriter output) {
+        System.out.println("PING recibido del cliente.");
         output.println("PONG");
     }
     private void handleList(String directoryPath, PrintWriter output) {
