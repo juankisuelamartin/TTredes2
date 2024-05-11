@@ -11,22 +11,25 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import java.security.KeyStore;
+import java.util.concurrent.Executors;
 import javax.net.ssl.SSLSocket;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Semaphore;
 //TODO ARREGLAR EXCEPCION QUE SALTA AL REINICIAR EL CLIENTE. java.net.SocketException: Connection reset
-//TODO ARREGLAR EXCEPCION NULL AL HACER EXIT. java.lang.NullPointerException LINEA 85
 public class RemoteCommanderServer {
     private static int port = 8008; // Valor predeterminado para el puerto
     private static boolean useSSL = false; // Valor predeterminado para SSL
     private static int maxClients = 10; // Valor predeterminado para el máximo de clientes
+    private static ExecutorService threadPool;
+    private static AtomicInteger currentClients = new AtomicInteger(0);
     private static final String KEYSTORE_PATH = "path/to/keystore.jks";
     private static final String KEYSTORE_PASS = "password";
     private static final String TRUSTSTORE_PATH = "path/to/truststore.jks";
     private static final String TRUSTSTORE_PASS = "password";
     private static final String carpetaServidor = "/home/ubuntu/FolderServidor";
     // /home/ubuntu/FolderServidor
-    // C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor
+    // C:\Users\Juanki\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor
     private static final int __MAX_BUFFER = 1024;
-    private static ExecutorService threadPool;
 
     static File logCommandsFile = new File("acciones.log");
     static File logErrorsFile = new File("../../../errores.log");
@@ -53,7 +56,6 @@ public class RemoteCommanderServer {
     }
 
     public static void main(String[] args) throws Exception {
-
         if (!parseArguments(args)) {
             System.out.println("Usage: java RemoteCommanderServer modo=SSL|noSSL puerto=<port> max_clientes=<maxClients>");
             logErrors("ERROR: Usage: java RemoteCommanderServer modo=SSL|noSSL puerto=<port> max_clientes=<maxClients>");
@@ -61,6 +63,11 @@ public class RemoteCommanderServer {
         } else {
             logCommands("Comando de inicio: java RemoteCommanderServer " + String.join(" ", args));
         }
+
+        // Inicialización del ThreadPool con el número máximo de clientes
+        threadPool = Executors.newFixedThreadPool(maxClients);
+        logCommands("ThreadPool inicializado con " + maxClients + " clientes máximos.");
+        System.out.println("ThreadPool inicializado con " + maxClients + " clientes máximos.");
 
         if (useSSL) {
             startSSLServer();
@@ -82,6 +89,7 @@ public class RemoteCommanderServer {
                 }
             } else if (arg.startsWith("max_clientes=")) {
                 try {
+                    // Extraer el número de clientes máximos permitidos.
                     maxClients = Integer.parseInt(arg.substring(13));
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid number of max clients.");
@@ -100,78 +108,79 @@ public class RemoteCommanderServer {
 
     public void sirve(Socket cliente) {
         new Thread(() -> {
-            try {
-                InputStream inRaw = cliente.getInputStream();
-                OutputStream outRaw = cliente.getOutputStream();
-                DataInputStream in = new DataInputStream(new BufferedInputStream(inRaw));
-                PrintWriter output = new PrintWriter(new OutputStreamWriter(outRaw), true);
+            try (Socket cl = cliente;
+                 InputStream inRaw = cl.getInputStream();
+                 OutputStream outRaw = cl.getOutputStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(inRaw));
+                 DataInputStream in = new DataInputStream(new BufferedInputStream(inRaw));
+                 PrintWriter output = new PrintWriter(new OutputStreamWriter(outRaw), true)) {
 
-                while (true) {
-                    // Asumiendo que el comando inicial viene como un string de texto
-                    // Usar readLine del BufferedReader para leer el comando si es texto, no DataInputStream
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                    String recibido = reader.readLine();
+                String recibido;
+                while ((recibido = reader.readLine()) != null) {  // Continuar leyendo hasta que el cliente cierre la conexión
                     String[] tokens = recibido.split(" ");
                     switch (tokens[0]) {
                         case "PING":
-                            logCommands("PING recibido del cliente. ");
+                            logCommands("PING recibido del cliente.");
                             handlePing(output);
                             logCommands("PONG enviado al cliente.");
                             break;
                         case "LIST":
-                            logCommands("LIST recibido del cliente. ");
+                            logCommands("LIST recibido del cliente.");
                             System.out.println("LISTANDO: " + tokens[1]);
                             handleList(tokens[1], output); // Solo se pasa la ruta del directorio
-                            logCommands("LIST enviado al cliente. ");
+                            logCommands("LIST enviado al cliente.");
                             break;
                         case "SEND":
-                            logCommands("SEND recibido del cliente. ");
+                            logCommands("SEND recibido del cliente.");
                             System.out.println("RECIBIENDO ARCHIVO: " + tokens[1]);
                             handleSend(tokens, in, output);
-                            logCommands("SEND enviado al cliente. ");
+                            logCommands("SEND enviado al cliente.");
                             break;
                         case "RECEIVE":
-                            logCommands("RECEIVE recibido del cliente. ");
+                            logCommands("RECEIVE recibido del cliente.");
                             System.out.println("ENVIANDO ARCHIVO: " + tokens[1]);
-                            handleReceive(cliente, recibido);
-                            logCommands("RECEIVE enviado al cliente. ");
+                            handleReceive(cl, recibido);
+                            logCommands("RECEIVE enviado al cliente.");
                             break;
                         case "EXEC":
-                            logCommands("EXEC recibido del cliente. ");
+                            logCommands("EXEC recibido del cliente.");
                             System.out.println("EJECUTANDO COMANDO: " + tokens[1]);
                             handleExec(recibido, output);
-                            logCommands("EXEC enviado al cliente. ");
+                            logCommands("EXEC enviado al cliente.");
                             break;
                         case "EXIT":
-                            logCommands("EXIT recibido del cliente. ");
+                            logCommands("EXIT recibido del cliente.");
                             System.out.println("Cerrando conexión por solicitud del cliente.");
-                            cliente.close();
-                            logCommands("EXIT enviado al cliente. ");
-                            return; // Salir del bucle y del hilo
+                            return; // Salir del bucle y del hilo, los recursos se cerrarán automáticamente
                         default:
-                            // Comando no conocido, enviar al servidor
                             logCommands("Comando no reconocido: " + recibido);
-                            System.out.println(recibido);
+                            output.println("Comando no reconocido.");
                             break;
                     }
                 }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                logErrors("ERROR: " + e.getMessage());
-            }finally {
+            } catch (IOException e) {
+                System.err.println("IOException: " + e.getMessage());
+                logErrors("Cliente ha cerrado la conexion de forma abrupta: " + e.getMessage());
+            } finally {
                 try {
-                    cliente.close(); // Asegúrate de cerrar el socket al final.
+                    if (!cliente.isClosed()) {
+                        cliente.close();
+                    }
                 } catch (IOException e) {
                     System.err.println("Error al cerrar el socket: " + e.getMessage());
                     logErrors("Error al cerrar el socket: " + e.getMessage());
                 }
+                logCommands("Conexión con cliente cerrada.");
+
+                currentClients.decrementAndGet(); // Decrementa el contador de clientes conectados
             }
         }).start();
     }
 
+
     private void handlePing(PrintWriter output) {
         System.out.println("PING recibido del cliente.");
+        System.out.println("Numero de clientes conectados: " + currentClients.get());
         output.println("PONG");
     }
     private void handleList(String directoryPath, PrintWriter output) {
@@ -319,12 +328,16 @@ public class RemoteCommanderServer {
 
         sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
         SSLServerSocketFactory ssf = sslContext.getServerSocketFactory();
-        SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(port);
-        System.out.println("SSL server started on port " + port);
-
-        while (true) {
-            SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
-            new RemoteCommanderServer().sirve(clientSocket);
+        try (SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(port)) {
+            System.out.println("SSL server started on port " + port);
+            while (true) {
+                SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+                // Utiliza el ExecutorService para manejar las conexiones entrantes
+                threadPool.execute(() -> new RemoteCommanderServer().sirve(clientSocket));
+            }
+        } catch (IOException e) {
+            System.out.println("Error al crear el socket del servidor SSL: " + e.getMessage());
+            logErrors("ERROR: Error al crear el socket del servidor SSL: " + e.getMessage());
         }
     }
     private static void startServer() throws IOException {
@@ -332,11 +345,35 @@ public class RemoteCommanderServer {
             System.out.println("Server started on port " + port + " in non-SSL mode.");
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                new RemoteCommanderServer().sirve(clientSocket);
+                maxclientcheck(clientSocket);
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Error al crear el socket del servidor: " + e.getMessage());
             logErrors("ERROR: Error al crear el socket del servidor: " + e.getMessage());
+        }
+    }
+    private static void maxclientcheck(Socket clientSocket) {
+        if (currentClients.get() < maxClients) {
+            threadPool.execute(() -> {
+                // Incrementa el contador de clientes conectados
+                currentClients.incrementAndGet();
+                new RemoteCommanderServer().sirve(clientSocket);
+            });
+        } else {
+            rejectClient(clientSocket);
+        }
+    }
+    private static void rejectClient(Socket clientSocket) {
+        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+            out.println("Connection rejected: server is at full capacity.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

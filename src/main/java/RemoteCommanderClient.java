@@ -67,6 +67,11 @@ public class RemoteCommanderClient {
 
             } else {
                 System.out.println("Server is not reachable.");
+                // Vemos si el servidor ha enviado algun mensaje de porque no esta disponible
+                if (response != null) {
+                    System.out.println("Server message: " + response);
+                    logErrors("ERROR: " + response);
+                }
                 logErrors("ERROR. El servidor no está disponible.");
                 closeConnection();
                 return;
@@ -76,9 +81,6 @@ public class RemoteCommanderClient {
             while (true) {
                 System.out.print("Enter command: ");
                 String command = scanner.nextLine();
-                if ("exit".equalsIgnoreCase(command)) {
-                    break;
-                }
                 logCommands(command + " enviado al servidor.");
                 executeCommand(command);
             }
@@ -105,12 +107,13 @@ public class RemoteCommanderClient {
                 logCommands(command + " enviado al servidor.");
                 handleExec(command);
             }else if (command.equals("EXIT")){
+                System.out.println("Cerrando la conexión con el servidor...");
                 logCommands(command + " enviado al servidor.");
                 out.println(command);
                 out.flush();
-                closeConnection(); // Cierra la conexión después de enviar FIN
+                 closeConnection(); // Cierra la conexión después de enviar FIN
                 // Parar la ejecucion
-                System.exit(0);
+                 System.exit(0);
             }else {
                 System.out.println("Comando no reconocido. Pruebe con: SEND, RECEIVE, LIST, EXEC o EXIT");
                 logErrors("ERROR: Comando no reconocido.");
