@@ -332,8 +332,7 @@ public class RemoteCommanderServer {
             System.out.println("SSL server started on port " + port);
             while (true) {
                 SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
-                // Utiliza el ExecutorService para manejar las conexiones entrantes
-                threadPool.execute(() -> new RemoteCommanderServer().sirve(clientSocket));
+                maxclientcheck(clientSocket); // Verifica si se puede aceptar el cliente
             }
         } catch (IOException e) {
             System.out.println("Error al crear el socket del servidor SSL: " + e.getMessage());
@@ -345,7 +344,7 @@ public class RemoteCommanderServer {
             System.out.println("Server started on port " + port + " in non-SSL mode.");
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                maxclientcheck(clientSocket);
+                maxclientcheck(clientSocket); // Verifica si se puede aceptar el cliente
             }
         } catch (IOException e) {
             System.out.println("Error al crear el socket del servidor: " + e.getMessage());
