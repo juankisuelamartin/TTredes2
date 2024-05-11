@@ -15,24 +15,24 @@ import java.util.concurrent.Executors;
 import javax.net.ssl.SSLSocket;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.Semaphore;
-//TODO ARREGLAR EXCEPCION QUE SALTA AL REINICIAR EL CLIENTE. java.net.SocketException: Connection reset
+
 public class RemoteCommanderServer {
     private static int port = 8008; // Valor predeterminado para el puerto
     private static boolean useSSL = false; // Valor predeterminado para SSL
     private static int maxClients = 10; // Valor predeterminado para el máximo de clientes
     private static ExecutorService threadPool;
     private static AtomicInteger currentClients = new AtomicInteger(0);
-    private static final String KEYSTORE_PATH = "path/to/keystore.jks";
-    private static final String KEYSTORE_PASS = "password";
-    private static final String TRUSTSTORE_PATH = "path/to/truststore.jks";
-    private static final String TRUSTSTORE_PASS = "password";
+    private static final String KEYSTORE_PATH = "/home/ubuntu/keystore.jks";
+    private static final String KEYSTORE_PASS = "TTredes2";
+    private static final String TRUSTSTORE_PATH = "/home/ubuntu/truststore.jks";
+    private static final String TRUSTSTORE_PASS = "TTredes2";
     private static final String carpetaServidor = "/home/ubuntu/FolderServidor";
     // /home/ubuntu/FolderServidor
     // C:\Users\Juanki\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor
     private static final int __MAX_BUFFER = 1024;
 
     static File logCommandsFile = new File("acciones.log");
-    static File logErrorsFile = new File("../../../errores.log");
+    static File logErrorsFile = new File("errores.log");
 
     public static void logCommands(String command) {
         try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
@@ -261,7 +261,7 @@ public class RemoteCommanderServer {
         File fileToSend = new File(carpetaServidor, fileName);
         if (!fileToSend.exists()) {
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            out.println("File not found");
+            out.println("Error: File not found");
             logErrors("ERROR: File not found");
             return;
         }

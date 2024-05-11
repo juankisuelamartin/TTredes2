@@ -5,7 +5,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Scanner;
-// TODO CONTROLAR EL NUM MAX_CLIENTES.
 public class RemoteCommanderClient {
     private String host;
     private int port;
@@ -17,8 +16,8 @@ public class RemoteCommanderClient {
     private Scanner scanner;
     private static final int __MAX_BUFFER = 1024;
 
-    static File logCommandsFile = new File("acciones.log");
-    static File logErrorsFile = new File("../../../errores.log");
+    static File logCommandsFile = new File("src/main/java/acciones.log");
+    static File logErrorsFile = new File("src/main/java/errores.log");
 
     public static void logCommands(String command) {
         try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
@@ -45,7 +44,14 @@ public class RemoteCommanderClient {
 
     public void connect() {
         try {
-            socket = useSSL ? createSSLSocket() : new Socket(host, port);
+            if (useSSL) {
+                configureSSL();  // Configura SSL si es necesario
+                socket = createSSLSocket();  // Crea un socket SSL
+            } else {
+                socket = new Socket(host, port);  // Crea un socket normal
+            }
+
+            // Configuración común del socket, PrintWriter y BufferedReader
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             scanner = new Scanner(System.in);
@@ -95,16 +101,12 @@ public class RemoteCommanderClient {
     private void executeCommand(String command) {
         try {
             if (command.startsWith("SEND")) {
-                logCommands(command + " enviado al servidor.");
                sendFile(command);
             } else if (command.startsWith("RECEIVE")) {
-                logCommands(command + " enviado al servidor.");
                receiveFile(command);
             } else if (command.startsWith("LIST")) {
-                logCommands(command + " enviado al servidor.");
                 handleList(command);
             } else if (command.startsWith("EXEC")) {
-                logCommands(command + " enviado al servidor.");
                 handleExec(command);
             }else if (command.equals("EXIT")){
                 System.out.println("Cerrando la conexión con el servidor...");
@@ -126,7 +128,6 @@ public class RemoteCommanderClient {
     // Método para listar los archivos del servidor
     private void handleList(String command) throws IOException {
         out.println(command); // Enviar el comando al servidor
-        logCommands(command + " enviado al servidor.");
         out.flush(); // Forzar la escritura del mensaje
 
         // Leer la respuesta del servidor y mostrarla en la consola
@@ -212,6 +213,13 @@ public class RemoteCommanderClient {
             return; // Detiene la ejecución si el directorio no es válido
         }
 
+        // Mandamos el comando al servidor
+        out.println(command);
+        logCommands(command + " enviado al servidor.");
+        out.flush();
+
+        if (ServerResponse() == 1) return;
+
         File fileToReceive = new File(destinationDirectory, fileName);
 
         // Intentamos crear el archivo para asegurarnos de que no haya errores de permisos, etc.
@@ -220,11 +228,6 @@ public class RemoteCommanderClient {
             logErrors("ERROR: Cannot create the file in the specified directory. Check permissions.");
             return; // Detiene la ejecución si no se puede crear el archivo
         }
-
-        // Mandamos el comando al servidor
-        out.println(command);
-        logCommands(command + " enviado al servidor.");
-        out.flush();
 
         // Esperamos la respuesta del servidor y preparamos el archivo para recibir los datos
         long fileSize = Long.parseLong(in.readLine()); // Tamaño del archivo
@@ -301,6 +304,11 @@ public class RemoteCommanderClient {
             e.printStackTrace();
             logErrors("ERROR: " + e.getMessage());
         }
+    }
+
+    public static void configureSSL() {
+        System.setProperty("javax.net.ssl.trustStore", "src/main/java/truststore.jks");
+        System.setProperty("javax.net.ssl.trustStorePassword", "TTredes2");
     }
 
     private SSLSocket createSSLSocket() throws IOException {
