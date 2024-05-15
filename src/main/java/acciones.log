@@ -19,3 +19,15 @@ Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_cliente
 ThreadPool inicializado con 10 clientes máximos.
 Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
 ThreadPool inicializado con 10 clientes máximos.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Server started on port 8000 in non-SSL mode.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Server started on port 8000 in non-SSL mode.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Server started on port 8000 in non-SSL mode.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Server started on port 8000 in non-SSL mode.

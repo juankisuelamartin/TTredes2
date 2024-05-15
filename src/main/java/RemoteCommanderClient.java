@@ -16,8 +16,8 @@ public class RemoteCommanderClient {
     private Scanner scanner;
     private static final int __MAX_BUFFER = 1024;
 
-    static File logCommandsFile = new File("src/main/java/acciones.log");
-    static File logErrorsFile = new File("src/main/java/errores.log");
+    static File logCommandsFile = new File("acciones.log");
+    static File logErrorsFile = new File("errores.log");
 
     public static void logCommands(String command) {
         try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
