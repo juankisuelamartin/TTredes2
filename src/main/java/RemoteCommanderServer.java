@@ -31,19 +31,14 @@ public class RemoteCommanderServer {
     // C:\Users\Juanki\Documents\GitHub\TTredes2\src\main\java\Trabajo_Teorico_LFT\carpeta_prueba_servidor
     private static final int __MAX_BUFFER = 1024;
 
-    static File logCommandsFile = new File("acciones.log");
-    static File logErrorsFile = new File("errores.log");
+    static File logCommandsFile = new File("src/main/java/acciones.log");
+    static File logErrorsFile = new File("src/main/java/errores.log");
 
     public static void logCommands(String command) {
         try (PrintWriter writerLogCommandsFile = new PrintWriter(new FileWriter(logCommandsFile, true))) {
             writerLogCommandsFile.println(command);
         } catch (IOException e) {
             System.err.println("Error al escribir en el archivo de comandos: " + e.getMessage());
-            try (PrintWriter writerLogErrorsFile = new PrintWriter(new FileWriter(logErrorsFile, true))) {
-                writerLogErrorsFile.println("ERROR: Error al escribir en el archivo de comandos: " + e.getMessage());
-            } catch (IOException ex) {
-                System.err.println("Error al escribir en el archivo de errores: " + ex.getMessage());
-            }
         }
     }
 
@@ -85,6 +80,7 @@ public class RemoteCommanderServer {
                     port = Integer.parseInt(arg.substring(7));
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid port number.");
+                    logErrors("ERROR: Invalid port number.");
                     return false;
                 }
             } else if (arg.startsWith("max_clientes=")) {
@@ -92,12 +88,13 @@ public class RemoteCommanderServer {
                     // Extraer el número de clientes máximos permitidos.
                     maxClients = Integer.parseInt(arg.substring(13));
                 } catch (NumberFormatException e) {
-                    System.out.println("Invalid number of max clients.");
-
+                    System.err.println("Invalid number of max clients.");
+                    logErrors("ERROR: Invalid number of max clients.");
                     return false;
                 }
             } else {
-                System.out.println("Unknown argument: " + arg);
+                System.err.println("ERROR: Unknown argument: " + arg);
+                logErrors("ERROR: Unknown argument: " + arg);
                 return false;
             }
         }
@@ -160,7 +157,7 @@ public class RemoteCommanderServer {
                 }
             } catch (IOException e) {
                 System.err.println("IOException: " + e.getMessage());
-                logErrors("Cliente ha cerrado la conexion de forma abrupta: " + e.getMessage());
+                logErrors("IOException: " + e.getMessage());
             } finally {
                 try {
                     if (!cliente.isClosed()) {
@@ -180,8 +177,11 @@ public class RemoteCommanderServer {
 
     private void handlePing(PrintWriter output) {
         System.out.println("PING recibido del cliente.");
+        logCommands("PING recibido del cliente.");
         System.out.println("Numero de clientes conectados: " + currentClients.get());
+        logCommands("Numero de clientes conectados: " + currentClients.get());
         output.println("PONG");
+        logCommands("PONG enviado al cliente.");
     }
     private void handleList(String directoryPath, PrintWriter output) {
         StringBuilder enviar = new StringBuilder();
@@ -199,6 +199,7 @@ public class RemoteCommanderServer {
             logErrors("ERROR: No existe la carpeta");
         }
         output.println("END"); // Indicador de fin de envío
+        logCommands("Lista de archivos enviada al cliente.");
         output.flush();
     }
    private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
@@ -209,7 +210,7 @@ public class RemoteCommanderServer {
        // Verifica que el directorio exista y sea un directorio
        if (!directory.exists() || !directory.isDirectory()) {
            System.out.println(directory);
-           output.println("Error: The destination directory does not exist or is not a directory.");
+           output.println("ERROR: The destination directory does not exist or is not a directory.");
            logErrors("ERROR: The destination directory does not exist or is not a directory.");
            return; // Detiene la ejecución si el directorio no es válido
        }
@@ -218,13 +219,14 @@ public class RemoteCommanderServer {
 
        // Intenta crear el archivo para asegurarse de que no hay errores de permisos, etc.
        if (!file.createNewFile()) {
-           output.println("Error: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
+           output.println("ERROR: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
            logErrors("ERROR: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
            return; // Detiene la ejecución si no se puede crear el archivo
        }
 
 
        output.println("Ready to receive file: " + fileName);
+       logCommands("Ready to receive file: " + fileName);
        FileOutputStream fos = new FileOutputStream(file);
        byte[] buffer = new byte[__MAX_BUFFER];
 
@@ -245,8 +247,10 @@ public class RemoteCommanderServer {
         // TODO ARREGLAR EL EXCESO DE 5 BYTES
        if (totalBytesRead == expectedBytes + 5) {
            output.println("File received successfully.");
+           logCommands("File received successfully.");
        } else {
            output.println("File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
+           logErrors("ERROR: File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
        }
    }
 
@@ -254,6 +258,7 @@ public class RemoteCommanderServer {
     public void handleReceive(Socket clientSocket, String command) throws IOException {
         String[] parts = command.split(" ");
         if (parts.length < 2) {
+            logErrors("Command format error. Usage: RECEIVE <file_name>");
             throw new IllegalArgumentException("Command format error. Usage: RECEIVE <file_name>");
         }
 
@@ -282,6 +287,7 @@ public class RemoteCommanderServer {
         }
 
         System.out.println("File '" + fileName + "' sent successfully to client.");
+        logCommands("File '" + fileName + "' sent successfully to client.");
     }
     public void handleExec(String inputLine, PrintWriter output) {
         if (!inputLine.startsWith("EXEC ")) {
@@ -306,6 +312,7 @@ public class RemoteCommanderServer {
             }
             process.waitFor();  // Espera a que el proceso termine
             output.println("END_OF_RESPONSE");  // Marca el fin de la salida del comando
+            logCommands("END_OF_RESPONSE");
         } catch (IOException | InterruptedException e) {
             output.println("Error executing command: " + e.getMessage());
             logErrors("ERROR: Error executing command: " + e.getMessage());
@@ -342,12 +349,13 @@ public class RemoteCommanderServer {
     private static void startServer() throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server started on port " + port + " in non-SSL mode.");
+            logCommands("Server started on port " + port + " in non-SSL mode.");
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 maxclientcheck(clientSocket); // Verifica si se puede aceptar el cliente
             }
         } catch (IOException e) {
-            System.out.println("Error al crear el socket del servidor: " + e.getMessage());
+            System.err.println("ERROR: Error al crear el socket del servidor: " + e.getMessage());
             logErrors("ERROR: Error al crear el socket del servidor: " + e.getMessage());
         }
     }
@@ -365,12 +373,15 @@ public class RemoteCommanderServer {
     private static void rejectClient(Socket clientSocket) {
         try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
             out.println("Connection rejected: server is at full capacity.");
+            logCommands("Connection rejected: server is at full capacity.");
         } catch (IOException e) {
+            logErrors("ERROR: Error al rechazar la conexión: " + e.getMessage());
             e.printStackTrace();
         } finally {
             try {
                 clientSocket.close();
             } catch (IOException e) {
+                logErrors("ERROR: Error al cerrar el socket del cliente: " + e.getMessage());
                 e.printStackTrace();
             }
         }

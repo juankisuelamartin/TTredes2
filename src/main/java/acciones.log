@@ -9,3 +9,13 @@ LIST /home/ubuntu enviado al servidor.
 EXEC ip a enviado al servidor.
 EXEC ip a enviado al servidor.
 EXEC ip a enviado al servidor.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
+Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
+ThreadPool inicializado con 10 clientes máximos.
