@@ -60,7 +60,9 @@ public class RemoteCommanderClient {
             out.println("PING enviado al servidor.");
             logCommands("PING enviado al servidor.");
             socket.setSoTimeout(5000); // Establecer un tiempo de espera para la respuesta del servidor
+
             String response = in.readLine();
+            System.out.println(response);
             if (response != null && response.equals("PONG")) {
                 System.out.println("Server is reachable.");
                 System.out.println("Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT\n" +
@@ -98,8 +100,9 @@ public class RemoteCommanderClient {
                 executeCommand(command);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            logErrors("ERROR: " + e.getMessage());
+            System.out.println("Server is not reachable. Server might be at full capacity.");
+            logErrors("ERROR, full capacity? : " + e.getMessage());
+
         } finally {
             closeConnection();
         }
