@@ -31,3 +31,14 @@ Server started on port 8000 in non-SSL mode.
 Comando de inicio: java RemoteCommanderServer modo=noSSL puerto=8000 max_clientes=10
 ThreadPool inicializado con 10 clientes máximos.
 Server started on port 8000 in non-SSL mode.
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 

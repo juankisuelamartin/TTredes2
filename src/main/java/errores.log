@@ -1,1 +1,3 @@
 ERROR: Comando no reconocido.
+ERROR: Usage: java RemoteCommanderClient <modo> <host> <port> <client_directory>
+ERROR: Connection timed out: connect

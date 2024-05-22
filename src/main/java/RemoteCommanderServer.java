@@ -289,6 +289,7 @@ public class RemoteCommanderServer {
         System.out.println("File '" + fileName + "' sent successfully to client.");
         logCommands("File '" + fileName + "' sent successfully to client.");
     }
+
     public void handleExec(String inputLine, PrintWriter output) {
         if (!inputLine.startsWith("EXEC ")) {
             output.println("Error: Invalid command format.");

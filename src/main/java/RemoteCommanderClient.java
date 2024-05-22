@@ -210,7 +210,7 @@ public class RemoteCommanderClient {
         // Dividimos el comando en partes para obtener el nombre del archivo y la ruta de destino
         String[] commandParts = command.split(" ");
         if (commandParts.length < 3) {
-            System.err.println("ERROR: Usage: RECEIVE <file_name> <local_destination_path>");
+            System.out.println("Usage: RECEIVE <file_name> <local_destination_path>");
             logErrors("ERROR: Usage: RECEIVE <file_name> <local_destination_path>");
             return;
         }
@@ -221,7 +221,7 @@ public class RemoteCommanderClient {
 
         // Verificamos que el directorio de destino exista y sea un directorio
         if (!destinationDirectory.exists() || !destinationDirectory.isDirectory()) {
-            System.err.println("Error: The destination directory does not exist or is not a directory.");
+            System.out.println("Error: The destination directory does not exist or is not a directory.");
             logErrors("ERROR: The destination directory does not exist or is not a directory.");
             return; // Detiene la ejecución si el directorio no es válido
         }
@@ -231,7 +231,22 @@ public class RemoteCommanderClient {
         logCommands(command + " enviado al servidor.");
         out.flush();
 
-        if (ServerResponse() == 1) return;
+        // Leemos la respuesta del servidor
+        String serverResponse = in.readLine();
+        if (serverResponse == null || serverResponse.contains("Error")) {
+            System.out.println("Server response: " + serverResponse);
+            logErrors("ERROR: " + serverResponse);
+            return;
+        }
+
+        long fileSize;
+        try {
+            fileSize = Long.parseLong(serverResponse);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid file size received from server.");
+            logErrors("ERROR: Invalid file size received from server.");
+            return;
+        }
 
         File fileToReceive = new File(destinationDirectory, fileName);
 
@@ -242,8 +257,7 @@ public class RemoteCommanderClient {
             return; // Detiene la ejecución si no se puede crear el archivo
         }
 
-        // Esperamos la respuesta del servidor y preparamos el archivo para recibir los datos
-        long fileSize = Long.parseLong(in.readLine()); // Tamaño del archivo
+        // Preparamos el archivo para recibir los datos
         try (FileOutputStream fos = new FileOutputStream(fileToReceive)) {
             byte[] buffer = new byte[__MAX_BUFFER];
             int bytesRead;
@@ -262,6 +276,7 @@ public class RemoteCommanderClient {
 
         System.out.println("File '" + fileName + "' received successfully and saved to '" + localPath + "'");
     }
+
 
     private void handleExec(String command) throws IOException {
         // Enviar el comando completo al servidor
@@ -321,7 +336,7 @@ public class RemoteCommanderClient {
     }
 
     public static void configureSSL() {
-        System.setProperty("javax.net.ssl.trustStore", "src/main/java/truststore.jks");
+        System.setProperty("javax.net.ssl.trustStore", "truststore.jks");
         System.setProperty("javax.net.ssl.trustStorePassword", "TTredes2");
     }
 
