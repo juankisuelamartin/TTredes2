@@ -149,10 +149,6 @@ public class RemoteCommanderServer {
                             logCommands("EXIT recibido del cliente.");
                             System.out.println("Cerrando conexión por solicitud del cliente.");
                             return; // Salir del bucle y del hilo, los recursos se cerrarán automáticamente
-                        default:
-                            logCommands("Comando no reconocido: " + recibido);
-                            output.println("Comando no reconocido.");
-                            break;
                     }
                 }
             } catch (IOException e) {
@@ -244,8 +240,7 @@ public class RemoteCommanderServer {
        }
        fos.close();
 
-        // TODO ARREGLAR EL EXCESO DE 5 BYTES
-       if (totalBytesRead == expectedBytes + 5) {
+       if (totalBytesRead == expectedBytes) {
            output.println("File received successfully.");
            logCommands("File received successfully.");
        } else {
