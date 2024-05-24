@@ -198,56 +198,55 @@ public class RemoteCommanderServer {
         logCommands("Lista de archivos enviada al cliente.");
         output.flush();
     }
-   private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
-       String directoryPath = tokens[3].trim();
-       String fileName = tokens[1].trim();
-       File directory = new File(directoryPath);
+    private void handleSend(String[] tokens, DataInputStream in, PrintWriter output) throws IOException {
+        String directoryPath = tokens[3].trim();
+        String fileName = tokens[1].trim();
+        File directory = new File(directoryPath);
 
-       // Verifica que el directorio exista y sea un directorio
-       if (!directory.exists() || !directory.isDirectory()) {
-           System.out.println(directory);
-           output.println("ERROR: The destination directory does not exist or is not a directory.");
-           logErrors("ERROR: The destination directory does not exist or is not a directory.");
-           return; // Detiene la ejecución si el directorio no es válido
-       }
+        // Verifica que el directorio exista y sea un directorio
+        if (!directory.exists() || !directory.isDirectory()) {
+            System.out.println(directory);
+            output.println("ERROR: The destination directory does not exist or is not a directory.");
+            logErrors("ERROR: The destination directory does not exist or is not a directory.");
+            return; // Detiene la ejecución si el directorio no es válido
+        }
 
-       File file = new File(directoryPath, fileName);
+        File file = new File(directoryPath, fileName);
 
-       // Intenta crear el archivo para asegurarse de que no hay errores de permisos, etc.
-       if (!file.createNewFile()) {
-           output.println("ERROR: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
-           logErrors("ERROR: Cannot create file in the specified directory. Check permissions or if a file already Exists.");
-           return; // Detiene la ejecución si no se puede crear el archivo
-       }
+        // Intenta crear el archivo para asegurarse de que no hay errores de permisos, etc.
+        if (!file.createNewFile()) {
+            output.println("ERROR: Cannot create file in the specified directory. Check permissions or if a file already exists.");
+            logErrors("ERROR: Cannot create file in the specified directory. Check permissions or if a file already exists.");
+            return; // Detiene la ejecución si no se puede crear el archivo
+        }
 
+        output.println("Ready to receive file: " + fileName);
+        logCommands("Ready to receive file: " + fileName);
+        FileOutputStream fos = new FileOutputStream(file);
+        byte[] buffer = new byte[__MAX_BUFFER];
 
-       output.println("Ready to receive file: " + fileName);
-       logCommands("Ready to receive file: " + fileName);
-       FileOutputStream fos = new FileOutputStream(file);
-       byte[] buffer = new byte[__MAX_BUFFER];
+        int expectedBytes = Integer.parseInt(tokens[2]); // el tamaño del archivo viene como segundo token.
+        int bytesRead;
+        int totalBytesRead = 0;
 
-       int expectedBytes = Integer.parseInt(tokens[2]); // el tamaño del archivo viene como segundo token.
-       int bytesRead;
-       int totalBytesRead = 0;
+        while (totalBytesRead < expectedBytes) {
+            bytesRead = in.read(buffer);
+            if (bytesRead == -1) {
+                break;
+            }
+            fos.write(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+        }
+        fos.close();
 
-       while (totalBytesRead < expectedBytes) {
-           bytesRead = in.read(buffer);
-           if (bytesRead == -1) {
-               break;
-           }
-           fos.write(buffer, 0, bytesRead);
-           totalBytesRead += bytesRead;
-       }
-       fos.close();
-
-       if (totalBytesRead == expectedBytes) {
-           output.println("File received successfully.");
-           logCommands("File received successfully.");
-       } else {
-           output.println("File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
-           logErrors("ERROR: File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
-       }
-   }
+        if (totalBytesRead == expectedBytes) {
+            output.println("File received successfully.");
+            logCommands("File received successfully.");
+        } else {
+            output.println("File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
+            logErrors("ERROR: File transfer incomplete. Expected: " + expectedBytes + " bytes, but got: " + totalBytesRead + " bytes.");
+        }
+    }
 
 
     public void handleReceive(Socket clientSocket, String command) throws IOException {

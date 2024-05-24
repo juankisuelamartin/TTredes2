@@ -191,3 +191,228 @@ EXEC <comando_a_ejecutar_en_servidor>
 EXIT para cerrar la conexion del cliente
 
 Enter command: 
+SEND TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_servidor enviado al servidor.
+SEND TEST3.jpg 123240 C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_servidor
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+SEND TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_servidor enviado al servidor.
+SEND TEST3.jpg 123240 C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_servidor
+Starting file transfer...
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+SEND TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_servidor enviado al servidor.
+SEND TEST3.jpg 123240 C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_servidor
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+RECEIVE  enviado al servidor.
+Enter command: 
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+EXEC ip a enviado al servidor.
+EXEC ip a enviado al servidor.
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST3.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+RECEIVE TEST.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+EXEC ip a enviado al servidor.
+EXEC ip a enviado al servidor.
+Enter command: 
+PING enviado al servidor.
+PONG recibido del servidor.
+Comandos aceptados: SEND, RECEIVE, LIST, EXEC o EXIT
+Ejemplo de uso:
+SEND <nombre_archivo> <ruta_destino>
+RECEIVE <nombre_archivo> <ruta_destino>
+LIST <ruta_a_listar_servidor>
+EXEC <comando_a_ejecutar_en_servidor>
+EXIT para cerrar la conexion del cliente
+
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+SEND TEST3.jpg /home/ubuntu enviado al servidor.
+SEND TEST3.jpg 123240 /home/ubuntu
+Starting file transfer...
+File transfer completed.
+EOF
+Enter command: 
+RECEIVE TEST.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+RECEIVE TEST.jpg C:\Users\soyju\Documents\GitHub\TTredes2\src\main\java\carpeta_prueba_local enviado al servidor.
+Enter command: 
+EXEC ip a enviado al servidor.
+EXEC ip a enviado al servidor.
+Enter command: 
